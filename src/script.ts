@@ -1,57 +1,22 @@
-import DeviceDetector from "https://cdn.skypack.dev/device-detector-js@2.2.10";
+import * as controls from "@mediapipe/control_utils"
+import * as drawingUtils from "@mediapipe/drawing_utils"
 
-// Usage: testSupport({client?: string, os?: string}[])
-// Client and os are regular expressions.
-// See: https://cdn.jsdelivr.net/npm/device-detector-js@2.2.10/README.md for
-// legal values for client and os
-testSupport([
-  { client: 'Chrome' },
-]);
+import * as mpPose from "@mediapipe/pose"
+import { LandmarkGrid } from "@mediapipe/control_utils_3d"
 
-function testSupport(supportedDevices: { client?: string; os?: string; }[])
-{
-  const deviceDetector = new DeviceDetector();
-  const detectedDevice = deviceDetector.parse(navigator.userAgent);
 
-  let isSupported = false;
-  for (const device of supportedDevices)
-  {
-    if (device.client !== undefined)
-    {
-      const re = new RegExp(`^${device.client}$`);
-      if (!re.test(detectedDevice.client.name))
-      {
-        continue;
-      }
-    }
-    if (device.os !== undefined)
-    {
-      const re = new RegExp(`^${device.os}$`);
-      if (!re.test(detectedDevice.os.name))
-      {
-        continue;
-      }
-    }
-    isSupported = true;
-    break;
-  }
-  if (!isSupported)
-  {
-    alert(`This demo, running on ${detectedDevice.client.name}/${detectedDevice.os.name}, ` +
-      `is not well supported at this time, expect some flakiness while we improve our code.`);
-  }
-}
 
-const controls = window;
-const LandmarkGrid = window.LandmarkGrid;
-const drawingUtils = window;
-const mpPose = window;
-const options = {
-  locateFile: (file) =>
-  {
-    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`;
-  }
-};
+
+// const controls = window;
+// const LandmarkGrid = window.LandmarkGrid;
+// const drawingUtils = window;
+// const mpPose = window;
+// const options = {
+//   locateFile: (file) =>
+//   {
+//     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`;
+//   }
+// };
 
 // Our input frames will come from here.
 const videoElement =
@@ -168,7 +133,9 @@ function onResults(results: mpPose.Results): void
   }
 }
 
-const pose = new mpPose.Pose(options);
+// const pose = new mpPose.Pose(options);
+const pose = new mpPose.Pose();
+
 pose.onResults(onResults);
 
 // Present a control panel through which the user can manipulate the solution

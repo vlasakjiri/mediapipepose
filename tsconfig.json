@@ -1,8 +1,21 @@
 {
     "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
+        "target": "es6",
+        "module": "es6",
+        // // "moduleResolution": "nodenext",
+        // // "module": "commonjs",
+        // "module": "ES6",
+        // // "esModuleInterop": true,
+        "moduleResolution": "nodenext",
         "sourceMap": true,
-        "outDir": "dist"
+        "lib": [
+            "ES2017",
+            "DOM"
+        ],
+        // "paths": {
+        //     "@mediapipe/*": [
+        //         "./node_modules/@mediapipe/*"
+        //     ]
+        // }
     }
 }

@@ -6,7 +6,6 @@
     transform: rotate(360deg);
   }
 }
-
 .abs {
   position: absolute;
 }
@@ -14,14 +13,14 @@
 a {
   color: white;
   text-decoration: none;
-  &:hover {
-    color: lightblue;
-  }
+}
+a:hover {
+  color: lightblue;
 }
 
 body {
   bottom: 0;
-  font-family: 'Titillium Web', sans-serif;
+  font-family: "Titillium Web", sans-serif;
   color: white;
   left: 0;
   margin: 0;
@@ -46,9 +45,9 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  &.selfie {
-    transform: scale(-1, 1);
-  }
+}
+.input_video.selfie {
+  transform: scale(-1, 1);
 }
 
 .input_image {
@@ -56,11 +55,11 @@ body {
 }
 
 .canvas-container {
-  display:flex;
+  display: flex;
   height: 100%;
   width: 100%;
   justify-content: center;
-  align-items:center;
+  align-items: center;
 }
 
 .output_canvas {
@@ -74,19 +73,17 @@ body {
 .logo {
   bottom: 10px;
   right: 20px;
-
-  .title {
-    color: white;
-    font-size: 28px;
-  }
-
-  .subtitle {
-    position: relative;
-    color: white;
-    font-size: 10px;
-    left: -30px;
-    top: 20px;
-  }
+}
+.logo .title {
+  color: white;
+  font-size: 28px;
+}
+.logo .subtitle {
+  position: relative;
+  color: white;
+  font-size: 10px;
+  left: -30px;
+  top: 20px;
 }
 
 .control-panel {
@@ -107,20 +104,18 @@ body {
   justify-content: center;
   opacity: 1;
   transition: opacity 1s;
-
-  .message {
-    font-size: x-large;
-  }
-
-  .spinner {
-    position: absolute;
-    width: 120px;
-    height: 120px;
-    animation: spin 1s linear infinite;
-    border: 32px solid #bebebe;
-    border-top: 32px solid #3498db;
-    border-radius: 50%;
-  }
+}
+.loading .message {
+  font-size: x-large;
+}
+.loading .spinner {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  animation: spin 1s linear infinite;
+  border: 32px solid #bebebe;
+  border-top: 32px solid #3498db;
+  border-radius: 50%;
 }
 
 .loaded .loading {
