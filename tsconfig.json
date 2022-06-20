@@ -12,11 +12,6 @@
         "lib": [
             "ES2017",
             "DOM"
-        ],
-        // "paths": {
-        //     "@mediapipe/*": [
-        //         "./node_modules/@mediapipe/*"
-        //     ]
-        // }
+        ]
     }
 }

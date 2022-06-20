@@ -7,20 +7,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import * as controls from "@mediapipe/control_utils";
-import * as drawingUtils from "@mediapipe/drawing_utils";
-import * as mpPose from "@mediapipe/pose";
-import { LandmarkGrid } from "@mediapipe/control_utils_3d";
-// const controls = window;
-// const LandmarkGrid = window.LandmarkGrid;
-// const drawingUtils = window;
-// const mpPose = window;
-// const options = {
-//   locateFile: (file) =>
-//   {
-//     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`;
-//   }
-// };
+const controls = window;
+const LandmarkGrid = window.LandmarkGrid;
+const drawingUtils = window;
+const mpPose = window;
+const options = {
+    locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`;
+    }
+};
 // Our input frames will come from here.
 const videoElement = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
@@ -98,7 +93,7 @@ function onResults(results) {
     }
 }
 // const pose = new mpPose.Pose(options);
-const pose = new mpPose.Pose();
+const pose = new mpPose.Pose(options);
 pose.onResults(onResults);
 // Present a control panel through which the user can manipulate the solution
 // options.
@@ -171,4 +166,5 @@ new controls
     activeEffect = x['effect'];
     pose.setOptions(options);
 });
+export {};
 //# sourceMappingURL=script.js.map

@@ -1,22 +1,22 @@
-import * as controls from "@mediapipe/control_utils"
-import * as drawingUtils from "@mediapipe/drawing_utils"
+import * as Controls from "../types/control_utils"
+import type * as DrawingUtils from "../types/drawing_utils"
 
-import * as mpPose from "@mediapipe/pose"
-import { LandmarkGrid } from "@mediapipe/control_utils_3d"
-
-
+import type * as MPPose from "../types/pose"
+import type { LandmarkGrid as LandmarkGridType } from "../types/control_utils_3d"
 
 
-// const controls = window;
-// const LandmarkGrid = window.LandmarkGrid;
-// const drawingUtils = window;
-// const mpPose = window;
-// const options = {
-//   locateFile: (file) =>
-//   {
-//     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`;
-//   }
-// };
+
+const controls = window as unknown as typeof Controls;
+const LandmarkGrid = (window as any).LandmarkGrid as typeof LandmarkGridType;
+const drawingUtils = window as unknown as typeof DrawingUtils;
+const mpPose = window as unknown as typeof MPPose;
+
+const options = {
+  locateFile: (file) =>
+  {
+    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`;
+  }
+};
 
 // Our input frames will come from here.
 const videoElement =
@@ -54,7 +54,7 @@ const grid = new LandmarkGrid(landmarkContainer, {
 });
 
 let activeEffect = 'mask';
-function onResults(results: mpPose.Results): void
+function onResults(results: MPPose.Results): void
 {
   // Hide the spinner.
   document.body.classList.add('loaded');
@@ -134,7 +134,7 @@ function onResults(results: mpPose.Results): void
 }
 
 // const pose = new mpPose.Pose(options);
-const pose = new mpPose.Pose();
+const pose = new mpPose.Pose(options);
 
 pose.onResults(onResults);
 
@@ -163,7 +163,7 @@ new controls
         pose.reset();
       },
       onFrame:
-        async (input: controls.InputImage, size: controls.Rectangle) =>
+        async (input: Controls.InputImage, size: Controls.Rectangle) =>
         {
           const aspect = size.height / size.width;
           let width: number, height: number;
@@ -212,7 +212,7 @@ new controls
   ])
   .on(x =>
   {
-    const options = x as mpPose.Options;
+    const options = x as MPPose.Options;
     videoElement.classList.toggle('selfie', options.selfieMode);
     activeEffect = (x as { [key: string]: string })['effect'];
     pose.setOptions(options);
