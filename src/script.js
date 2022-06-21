@@ -41,6 +41,29 @@ const grid = new LandmarkGrid(landmarkContainer, {
     showHidden: false,
     centered: true,
 });
+function get_angle(lm) {
+    let left = false;
+    let hip, shoulder;
+    if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z) {
+        left = true;
+        hip = lm[mpPose.POSE_LANDMARKS.LEFT_HIP];
+        shoulder = lm[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
+    }
+    else {
+        hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
+        shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
+    }
+    let angle = Math.atan2(Math.abs(shoulder.y) - hip.y, Math.abs(shoulder.x) - hip.x) * 180 / Math.PI;
+    return { angle, left };
+}
+function filter_landmarks(idx, landmarks) {
+    return landmarks.map((lm, i) => {
+        if (!idx.includes(i)) {
+            lm.visibility = 0;
+        }
+        return lm;
+    });
+}
 let activeEffect = 'mask';
 function onResults(results) {
     // Hide the spinner.
@@ -72,18 +95,21 @@ function onResults(results) {
     else {
         canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
     }
-    if (results.poseLandmarks) {
-        drawingUtils.drawConnectors(canvasCtx, results.poseLandmarks, mpPose.POSE_CONNECTIONS, { visibilityMin: 0.65, color: 'white' });
-        drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_LEFT)
-            .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(255,138,0)' });
-        drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_RIGHT)
-            .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(0,217,231)' });
-        drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_NEUTRAL)
-            .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'white' });
-    }
-    canvasCtx.restore();
+    let left = false;
+    let idx = [];
     if (results.poseWorldLandmarks) {
-        grid.updateLandmarks(results.poseWorldLandmarks, mpPose.POSE_CONNECTIONS, [
+        let res = get_angle(results.poseWorldLandmarks);
+        left = res.left;
+        console.log("3d angle: " + res.angle);
+        // console.log("2d angle: " + get_angle(results.poseLandmarks));
+        if (res.left) {
+            idx = Object.values(mpPose.POSE_LANDMARKS_LEFT);
+        }
+        else {
+            idx = Object.values(mpPose.POSE_LANDMARKS_RIGHT);
+        }
+        let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
+        grid.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
             { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
             { list: Object.values(mpPose.POSE_LANDMARKS_RIGHT), color: 'RIGHT' },
         ]);
@@ -91,6 +117,20 @@ function onResults(results) {
     else {
         grid.updateLandmarks([]);
     }
+    if (results.poseLandmarks) {
+        drawingUtils.drawConnectors(canvasCtx, filter_landmarks(idx, results.poseLandmarks), mpPose.POSE_CONNECTIONS, { visibilityMin: 0.65, color: 'white' });
+        if (left) {
+            drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_LEFT)
+                .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(255,138,0)' });
+        }
+        else {
+            drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_RIGHT)
+                .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(0,217,231)' });
+        }
+        drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_NEUTRAL)
+            .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'white' });
+    }
+    canvasCtx.restore();
 }
 // const pose = new mpPose.Pose(options);
 const pose = new mpPose.Pose(options);
