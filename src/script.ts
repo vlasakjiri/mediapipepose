@@ -68,7 +68,34 @@ function get_angle(lm: MPPose.LandmarkList)
     hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
     shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
   }
-  let angle = Math.atan2(Math.abs(shoulder.y) - hip.y, Math.abs(shoulder.x) - hip.x) * 180 / Math.PI
+  let x_diff = Math.abs(shoulder.x) - hip.x
+  let y_diff = Math.abs(shoulder.y) - hip.y;
+  let z_diff = Math.abs(shoulder.z) - hip.z
+  let x_vect = Math.sqrt(Math.pow(x_diff, 2) + Math.pow(z_diff, 2));
+  let y_vect = Math.sqrt(Math.pow(y_diff, 2) + Math.pow(z_diff, 2));
+
+  let angle = Math.atan2(y_vect, x_vect) * 180 / Math.PI;
+  return { angle, left }
+}
+
+function get_angle2d(lm: MPPose.LandmarkList, width: number, height: number)
+{
+  let left = false;
+  let hip: MPPose.Landmark, shoulder: MPPose.Landmark;
+  if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z)
+  {
+    left = true;
+    hip = lm[mpPose.POSE_LANDMARKS.LEFT_HIP];
+    shoulder = lm[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
+  }
+  else
+  {
+    hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
+    shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
+  }
+  let x_diff = Math.abs(Math.abs(shoulder.x) - hip.x) * width;
+  let y_diff = Math.abs(Math.abs(shoulder.y) - hip.y) * height;
+  let angle = Math.atan2(y_diff, x_diff) * 180 / Math.PI;
   return { angle, left }
 }
 
@@ -137,7 +164,7 @@ function onResults(results: MPPose.Results): void
     let res = get_angle(results.poseWorldLandmarks)
     left = res.left;
     console.log("3d angle: " + res.angle);
-    // console.log("2d angle: " + get_angle(results.poseLandmarks));
+    console.log("2d angle: " + get_angle2d(results.poseLandmarks, results.image.width, results.image.height).angle);
     if (res.left)
     {
       idx = Object.values(mpPose.POSE_LANDMARKS_LEFT)
