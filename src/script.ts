@@ -1,8 +1,8 @@
-import * as Controls from "../types/control_utils"
-import type * as DrawingUtils from "../types/drawing_utils"
+import * as Controls from "../types/control_utils";
+import type * as DrawingUtils from "../types/drawing_utils";
 
-import type * as MPPose from "../types/pose"
-import type { LandmarkGrid as LandmarkGridType } from "../types/control_utils_3d"
+import type * as MPPose from "../types/pose";
+import type { LandmarkGrid as LandmarkGridType } from "../types/control_utils_3d";
 
 
 
@@ -53,6 +53,22 @@ const grid = new LandmarkGrid(landmarkContainer, {
   centered: true,
 });
 
+const landmarkContainer2 =
+  document.getElementsByClassName('landmark-grid-container')[1] as HTMLDivElement;
+const grid2 = new LandmarkGrid(landmarkContainer, {
+  connectionColor: 0xCCCCCC,
+  definedColors:
+    [{ name: 'LEFT', value: 0xffa500 }, { name: 'RIGHT', value: 0x00ffff }],
+  range: 2,
+  fitToGrid: true,
+  labelSuffix: 'm',
+  landmarkSize: 2,
+  numCellsPerAxis: 4,
+  showHidden: false,
+  centered: true,
+});
+
+
 function get_angle(lm: MPPose.LandmarkList)
 {
   let left = false;
@@ -68,14 +84,16 @@ function get_angle(lm: MPPose.LandmarkList)
     hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
     shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
   }
-  let x_diff = Math.abs(shoulder.x) - hip.x
-  let y_diff = Math.abs(shoulder.y) - hip.y;
-  let z_diff = Math.abs(shoulder.z) - hip.z
+  let x_diff = Math.abs(shoulder.x - hip.x);
+  let y_diff = Math.abs(shoulder.y - hip.y);
+  let z_diff = Math.abs(shoulder.z - hip.z);
   let x_vect = Math.sqrt(Math.pow(x_diff, 2) + Math.pow(z_diff, 2));
   let y_vect = Math.sqrt(Math.pow(y_diff, 2) + Math.pow(z_diff, 2));
 
   let angle = Math.atan2(y_vect, x_vect) * 180 / Math.PI;
-  return { angle, left }
+  //  let angle = Math.atan2(y x_vect) * 180 / Math.PI;
+
+  return { angle, left };
 }
 
 function get_angle2d(lm: MPPose.LandmarkList, width: number, height: number)
@@ -93,10 +111,38 @@ function get_angle2d(lm: MPPose.LandmarkList, width: number, height: number)
     hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
     shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
   }
-  let x_diff = Math.abs(Math.abs(shoulder.x) - hip.x) * width;
-  let y_diff = Math.abs(Math.abs(shoulder.y) - hip.y) * height;
+  let x_diff = Math.abs(shoulder.x - hip.x) * width;
+  let y_diff = Math.abs(shoulder.y - hip.y) * height;
   let angle = Math.atan2(y_diff, x_diff) * 180 / Math.PI;
-  return { angle, left }
+  return { angle, left };
+}
+
+function get_angle3d(lm: MPPose.LandmarkList)
+{
+  let left = false;
+  let hip: MPPose.Landmark, shoulder: MPPose.Landmark;
+  if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z)
+  {
+    left = true;
+    hip = lm[mpPose.POSE_LANDMARKS.LEFT_HIP];
+    shoulder = lm[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
+  }
+  else
+  {
+    hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
+    shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
+  }
+  let x_diff = Math.abs(shoulder.x - hip.x);
+  let y_diff = Math.abs(shoulder.y - hip.y);
+  let z_diff = Math.abs(shoulder.z - hip.z);
+  const dot_product = x_diff * x_diff + y_diff * 0 + z_diff * z_diff;
+
+  const norm1 = Math.sqrt(Math.pow(x_diff, 2) + Math.pow(y_diff, 2) + Math.pow(z_diff, 2));
+  const norm2 = Math.sqrt(Math.pow(x_diff, 2) + 0 + Math.pow(z_diff, 2));
+  const cosa = dot_product / (norm1 * norm2);
+  const angle = Math.acos(cosa) * 180 / Math.PI;
+  return { angle, left };
+
 }
 
 function filter_landmarks(idx: number[], landmarks: MPPose.Landmark[])
@@ -161,20 +207,26 @@ function onResults(results: MPPose.Results): void
   if (results.poseWorldLandmarks)
   {
 
-    let res = get_angle(results.poseWorldLandmarks)
+    let res = get_angle(results.poseWorldLandmarks);
     left = res.left;
-    console.log("3d angle: " + res.angle);
+    console.log("angle: " + res.angle);
     console.log("2d angle: " + get_angle2d(results.poseLandmarks, results.image.width, results.image.height).angle);
+    console.log("3d angle: " + get_angle3d(results.poseLandmarks).angle);
+
     if (res.left)
     {
-      idx = Object.values(mpPose.POSE_LANDMARKS_LEFT)
+      idx = Object.values(mpPose.POSE_LANDMARKS_LEFT);
     }
     else
     {
-      idx = Object.values(mpPose.POSE_LANDMARKS_RIGHT)
+      idx = Object.values(mpPose.POSE_LANDMARKS_RIGHT);
     }
     let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
     grid.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
+      { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
+      { list: Object.values(mpPose.POSE_LANDMARKS_RIGHT), color: 'RIGHT' },
+    ]);
+    grid2.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
       { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
       { list: Object.values(mpPose.POSE_LANDMARKS_RIGHT), color: 'RIGHT' },
     ]);
@@ -182,6 +234,8 @@ function onResults(results: MPPose.Results): void
   else
   {
     grid.updateLandmarks([]);
+    grid2.updateLandmarks([]);
+
   }
 
   if (results.poseLandmarks)
@@ -297,6 +351,6 @@ new controls
   {
     const options = x as MPPose.Options;
     videoElement.classList.toggle('selfie', options.selfieMode);
-    activeEffect = (x as { [key: string]: string })['effect'];
+    activeEffect = (x as { [key: string]: string; })['effect'];
     pose.setOptions(options);
   });
