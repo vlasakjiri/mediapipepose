@@ -5,6 +5,7 @@
     "@mediapipe/control_utils_3d": "^0.3.1635987963",
     "@mediapipe/drawing_utils": "^0.3.1620248257",
     "@mediapipe/pose": "^0.5.1635988162",
+    "mathjs": "^10.6.4",
     "three": "^0.141.0"
   },
   "devDependencies": {

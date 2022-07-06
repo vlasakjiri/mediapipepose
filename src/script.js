@@ -7,6 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+const math = globalThis.math;
 const controls = window;
 const LandmarkGrid = window.LandmarkGrid;
 const drawingUtils = window;
@@ -41,7 +42,6 @@ const grid = new LandmarkGrid(landmarkContainer, {
     showHidden: false,
     centered: true,
 });
-const landmarkContainer2 = document.getElementsByClassName('landmark-grid-container')[1];
 const grid2 = new LandmarkGrid(landmarkContainer, {
     connectionColor: 0xCCCCCC,
     definedColors: [{ name: 'LEFT', value: 0xffa500 }, { name: 'RIGHT', value: 0x00ffff }],
@@ -53,6 +53,10 @@ const grid2 = new LandmarkGrid(landmarkContainer, {
     showHidden: false,
     centered: true,
 });
+function landmark_to_matrix(lm) {
+    const mat = math.matrix([lm.x, lm.y, lm.z]);
+    return mat;
+}
 function get_angle(lm) {
     let left = false;
     let hip, shoulder;
@@ -89,28 +93,6 @@ function get_angle2d(lm, width, height) {
     let x_diff = Math.abs(shoulder.x - hip.x) * width;
     let y_diff = Math.abs(shoulder.y - hip.y) * height;
     let angle = Math.atan2(y_diff, x_diff) * 180 / Math.PI;
-    return { angle, left };
-}
-function get_angle3d(lm) {
-    let left = false;
-    let hip, shoulder;
-    if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z) {
-        left = true;
-        hip = lm[mpPose.POSE_LANDMARKS.LEFT_HIP];
-        shoulder = lm[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
-    }
-    else {
-        hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
-        shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
-    }
-    let x_diff = Math.abs(shoulder.x - hip.x);
-    let y_diff = Math.abs(shoulder.y - hip.y);
-    let z_diff = Math.abs(shoulder.z - hip.z);
-    const dot_product = x_diff * x_diff + y_diff * 0 + z_diff * z_diff;
-    const norm1 = Math.sqrt(Math.pow(x_diff, 2) + Math.pow(y_diff, 2) + Math.pow(z_diff, 2));
-    const norm2 = Math.sqrt(Math.pow(x_diff, 2) + 0 + Math.pow(z_diff, 2));
-    const cosa = dot_product / (norm1 * norm2);
-    const angle = Math.acos(cosa) * 180 / Math.PI;
     return { angle, left };
 }
 function filter_landmarks(idx, landmarks) {
@@ -156,16 +138,31 @@ function onResults(results) {
     let idx = [];
     if (results.poseWorldLandmarks) {
         let res = get_angle(results.poseWorldLandmarks);
+        let mat = landmark_to_matrix(results.poseWorldLandmarks[0]);
         left = res.left;
         console.log("angle: " + res.angle);
         console.log("2d angle: " + get_angle2d(results.poseLandmarks, results.image.width, results.image.height).angle);
-        console.log("3d angle: " + get_angle3d(results.poseLandmarks).angle);
+        let near_shoulder, far_shoulder;
         if (res.left) {
             idx = Object.values(mpPose.POSE_LANDMARKS_LEFT);
+            near_shoulder = results.poseWorldLandmarks[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
+            far_shoulder = results.poseWorldLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
         }
         else {
             idx = Object.values(mpPose.POSE_LANDMARKS_RIGHT);
+            near_shoulder = results.poseWorldLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
+            far_shoulder = results.poseWorldLandmarks[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
         }
+        near_shoulder = landmark_to_matrix(near_shoulder);
+        far_shoulder = landmark_to_matrix(far_shoulder);
+        let vect_real = math.subtract(near_shoulder, far_shoulder);
+        let vect_ideal = math.matrix([0, 0, vect_real.get([2])]);
+        let x = vect_real.get([0]);
+        let z = -vect_real.get([2]);
+        // let y = vect_ideal[1] - vect_real[1];
+        let rot_y = Math.atan2(x, z);
+        console.log(`rotation: ${rot_y * 180 / Math.PI}`);
+        // let rot_x = Math.atan2(y, Math.hypot(x, z));
         let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
         grid.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
             { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
