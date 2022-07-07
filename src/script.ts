@@ -74,6 +74,30 @@ function landmark_to_matrix(lm: MPPose.Landmark)
   return mat;
 }
 
+function landmark_list_to_matrix(lm_list: MPPose.LandmarkList)
+{
+  let mat = [];
+  lm_list.forEach(lm =>
+  {
+    mat.push([lm.x, lm.y, lm.z]);
+  });
+  return mat;
+}
+
+function landmark_matrix_to_list(lm_mat: MathType.Matrix, lm_list: MPPose.LandmarkList)
+{
+  let new_lm_list: MPPose.LandmarkList = [];
+  for (let index = 0; index < lm_list.length; index++)
+  {
+
+    let x = lm_mat.get([index, 0]);
+    let y = lm_mat.get([index, 1]);
+    let z = lm_mat.get([index, 2]);
+    new_lm_list.push({ x: x, y: y, z: z, visibility: lm_list[index].visibility });
+  }
+  return new_lm_list;
+}
+
 
 function get_angle(lm: MPPose.LandmarkList)
 {
@@ -215,17 +239,30 @@ function onResults(results: MPPose.Results): void
     let x = vect_real.get([0]);
     let z = -vect_real.get([2]);
     // let y = vect_ideal[1] - vect_real[1];
-    let rot_y = Math.atan2(x, z);
+    let rot_y = -Math.atan2(x, z);
     console.log(`rotation: ${rot_y * 180 / Math.PI}`);
     // let rot_x = Math.atan2(y, Math.hypot(x, z));
 
+    let cos = Math.cos(rot_y);
+    let sin = Math.sin(rot_y);
+    let trans_matrix = math.matrix([
+      [cos, 0, sin],
+      [0, 1, 0],
+      [-sin, 0, cos]
+    ]);
+    let lm_mat = landmark_list_to_matrix(results.poseWorldLandmarks);
+    lm_mat = math.multiply(lm_mat, trans_matrix);
+
+
 
     let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
+    let landmarks_rotated = landmark_matrix_to_list(lm_mat, results.poseWorldLandmarks);
+
     grid.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
       { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
       { list: Object.values(mpPose.POSE_LANDMARKS_RIGHT), color: 'RIGHT' },
     ]);
-    grid2.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
+    grid2.updateLandmarks(landmarks_rotated, mpPose.POSE_CONNECTIONS, [
       { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
       { list: Object.values(mpPose.POSE_LANDMARKS_RIGHT), color: 'RIGHT' },
     ]);
