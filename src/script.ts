@@ -126,6 +126,27 @@ function get_angle(lm: MPPose.LandmarkList)
   return { angle, left };
 }
 
+function get_angle_rotated(lm: MPPose.LandmarkList)
+{
+  let left = false;
+  let hip: MPPose.Landmark, shoulder: MPPose.Landmark;
+  if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z)
+  {
+    left = true;
+    hip = lm[mpPose.POSE_LANDMARKS.LEFT_HIP];
+    shoulder = lm[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
+  }
+  else
+  {
+    hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
+    shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
+  }
+  let x_diff = Math.abs(shoulder.x - hip.x);
+  let y_diff = Math.abs(shoulder.y - hip.y);
+  let angle = Math.atan2(y_diff, x_diff) * 180 / Math.PI;
+  return { angle, left };
+}
+
 function get_angle2d(lm: MPPose.LandmarkList, width: number, height: number)
 {
   let left = false;
@@ -257,6 +278,10 @@ function onResults(results: MPPose.Results): void
 
     let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
     let landmarks_rotated = landmark_matrix_to_list(lm_mat, results.poseWorldLandmarks);
+
+    let res_rotated = get_angle(landmarks_rotated);
+    console.log(`rotated angle: ${res_rotated.angle}`);
+
 
     grid.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
       { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
