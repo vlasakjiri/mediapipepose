@@ -190,25 +190,35 @@ function onResults(results) {
         near_shoulder = landmark_to_matrix(near_shoulder);
         far_shoulder = landmark_to_matrix(far_shoulder);
         let vect_real = math.subtract(near_shoulder, far_shoulder);
-        let vect_ideal = math.matrix([0, 0, vect_real.get([2])]);
         let x = vect_real.get([0]);
+        let y = -vect_real.get([1]);
         let z = -vect_real.get([2]);
         // let y = vect_ideal[1] - vect_real[1];
         let rot_y = -Math.atan2(x, z);
+        let rot_x = -Math.atan2(y, z);
         console.log(`rotation: ${rot_y * 180 / Math.PI}`);
         // let rot_x = Math.atan2(y, Math.hypot(x, z));
-        let cos = Math.cos(rot_y);
-        let sin = Math.sin(rot_y);
-        let trans_matrix = math.matrix([
-            [cos, 0, sin],
+        let cos_y = Math.cos(rot_y);
+        let sin_y = Math.sin(rot_y);
+        let trans_matrix_y = math.matrix([
+            [cos_y, 0, sin_y],
             [0, 1, 0],
-            [-sin, 0, cos]
+            [-sin_y, 0, cos_y]
+        ]);
+        let cos_x = Math.cos(rot_x);
+        let sin_x = Math.sin(rot_x);
+        let trans_matrix_x = math.matrix([
+            [1, 0, 0],
+            [0, cos_x, -sin_x],
+            [0, sin_x, cos_x]
         ]);
         let lm_mat = landmark_list_to_matrix(results.poseWorldLandmarks);
-        lm_mat = math.multiply(lm_mat, trans_matrix);
+        lm_mat = math.multiply(lm_mat, trans_matrix_y);
+        lm_mat = math.multiply(lm_mat, trans_matrix_x);
         let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
         let landmarks_rotated = landmark_matrix_to_list(lm_mat, results.poseWorldLandmarks);
-        let res_rotated = get_angle(landmarks_rotated);
+        console.log(`x_diff=${landmarks_rotated[mpPose.POSE_LANDMARKS.LEFT_SHOULDER].x - landmarks_rotated[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER].x}, y_diff=${landmarks_rotated[mpPose.POSE_LANDMARKS.LEFT_SHOULDER].y - landmarks_rotated[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER].y}`);
+        let res_rotated = get_angle_rotated(landmarks_rotated);
         console.log(`rotated angle: ${res_rotated.angle}`);
         grid.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
             { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
