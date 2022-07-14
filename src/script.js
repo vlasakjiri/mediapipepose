@@ -129,6 +129,14 @@ function get_angle2d(lm, width, height) {
     let angle = Math.atan2(y_diff, x_diff) * 180 / Math.PI;
     return { angle, left };
 }
+function get_angle3d(a, b) {
+    const dot_product = math.dot(a, b);
+    const norm1 = math.norm(a);
+    const norm2 = math.norm(b);
+    const cosa = dot_product / (norm1 * norm2);
+    const angle = Math.acos(cosa) * 180 / Math.PI;
+    return angle;
+}
 function filter_landmarks(idx, landmarks) {
     return landmarks.map((lm, i) => {
         if (!idx.includes(i)) {
@@ -215,6 +223,8 @@ function onResults(results) {
         let lm_mat = landmark_list_to_matrix(results.poseWorldLandmarks);
         lm_mat = math.multiply(lm_mat, trans_matrix_y);
         lm_mat = math.multiply(lm_mat, trans_matrix_x);
+        console.log(get_angle3d(math.matrix([1, 0, 0]), math.matrix([0, 1, 0])));
+        console.log(get_angle3d(math.matrix([1, 0, 0]), math.matrix([1, 1, 0])));
         let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
         let landmarks_rotated = landmark_matrix_to_list(lm_mat, results.poseWorldLandmarks);
         console.log(`x_diff=${landmarks_rotated[mpPose.POSE_LANDMARKS.LEFT_SHOULDER].x - landmarks_rotated[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER].x}, y_diff=${landmarks_rotated[mpPose.POSE_LANDMARKS.LEFT_SHOULDER].y - landmarks_rotated[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER].y}`);

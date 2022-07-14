@@ -168,6 +168,17 @@ function get_angle2d(lm: MPPose.LandmarkList, width: number, height: number)
   return { angle, left };
 }
 
+function get_angle3d(a: MathType.Matrix, b: MathType.Matrix)
+{
+  const dot_product = math.dot(a, b);
+  const norm1 = math.norm(a) as number;
+  const norm2 = math.norm(b) as number;
+  const cosa = dot_product / (norm1 * norm2);
+  const angle = Math.acos(cosa) * 180 / Math.PI;
+  return angle;
+
+}
+
 
 function filter_landmarks(idx: number[], landmarks: MPPose.Landmark[])
 {
@@ -285,6 +296,8 @@ function onResults(results: MPPose.Results): void
     lm_mat = math.multiply(lm_mat, trans_matrix_y);
     lm_mat = math.multiply(lm_mat, trans_matrix_x);
 
+    console.log(get_angle3d(math.matrix([1, 0, 0]), math.matrix([0, 1, 0])));
+    console.log(get_angle3d(math.matrix([1, 0, 0]), math.matrix([1, 1, 0])));
 
 
 
