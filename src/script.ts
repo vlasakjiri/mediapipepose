@@ -1,4 +1,4 @@
-import * as Controls from "../types/control_utils";
+import type * as Controls from "../types/control_utils";
 import type * as DrawingUtils from "../types/drawing_utils";
 
 import type * as MPPose from "../types/pose";
@@ -168,7 +168,7 @@ function get_angle2d(lm: MPPose.LandmarkList, width: number, height: number)
   return { angle, left };
 }
 
-function get_angle3d(a: MathType.Matrix, b: MathType.Matrix)
+export function get_angle3d(a: MathType.Matrix, b: MathType.Matrix)
 {
   const dot_product = math.dot(a, b);
   const norm1 = math.norm(a) as number;
