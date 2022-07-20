@@ -147,25 +147,18 @@ function get_angle_rotated(lm: MPPose.LandmarkList)
   return { angle, left };
 }
 
-function get_angle2d(lm: MPPose.LandmarkList, width: number, height: number)
+function get_angle2d(a: MathType.Matrix, b: MathType.Matrix, width: number, height: number)
 {
-  let left = false;
-  let hip: MPPose.Landmark, shoulder: MPPose.Landmark;
-  if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z)
-  {
-    left = true;
-    hip = lm[mpPose.POSE_LANDMARKS.LEFT_HIP];
-    shoulder = lm[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
-  }
-  else
-  {
-    hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
-    shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
-  }
-  let x_diff = Math.abs(shoulder.x - hip.x) * width;
-  let y_diff = Math.abs(shoulder.y - hip.y) * height;
-  let angle = Math.atan2(y_diff, x_diff) * 180 / Math.PI;
-  return { angle, left };
+  let x_diff_a = a.get([0]) * width;
+  let y_diff_a = a.get([1]) * height;
+  let angle_a = Math.atan2(y_diff_a, x_diff_a);
+
+  let x_diff_b = b.get([0]) * width;
+  let y_diff_b = b.get([1]) * height;
+  let angle_b = Math.atan2(y_diff_a, x_diff_a);
+
+
+  return (angle_a - angle_b) * 180 / Math.PI;
 }
 
 export function get_angle3d(a: MathType.Matrix, b: MathType.Matrix)
@@ -248,7 +241,7 @@ function onResults(results: MPPose.Results): void
     let mat = landmark_to_matrix(results.poseWorldLandmarks[0]);
     left = res.left;
     console.log("angle: " + res.angle);
-    console.log("2d angle: " + get_angle2d(results.poseLandmarks, results.image.width, results.image.height).angle);
+    // console.log("2d angle: " + get_angle2d(results.poseLandmarks, results.image.width, results.image.height).angle);
 
     let near_shoulder, far_shoulder;
     if (res.left)
@@ -299,7 +292,12 @@ function onResults(results: MPPose.Results): void
     console.log(get_angle3d(math.matrix([1, 0, 0]), math.matrix([0, 1, 0])));
     console.log(get_angle3d(math.matrix([1, 0, 0]), math.matrix([1, 1, 0])));
 
+    let near_hip = left ? landmark_to_matrix(results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_HIP]) : landmark_to_matrix(results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_HIP]);
+    let near_shoulder_2d = left ? landmark_to_matrix(results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]) : landmark_to_matrix(results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]);
+    let vect_shoulder = math.subtract(near_shoulder_2d, near_hip);
 
+    let angle_2d = get_angle2d(vect_shoulder, math.matrix([0, 0, 0]), results.image.width, results.image.height);
+    console.log("2d angle: " + angle_2d);
 
     let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
     let landmarks_rotated = landmark_matrix_to_list(lm_mat, results.poseWorldLandmarks);
