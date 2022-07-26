@@ -88,16 +88,11 @@ function onResults(results) {
         }
         let near_hip = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_HIP]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_HIP]);
         let near_shoulder = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_SHOULDER]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]);
-        let vect_hip_shoulder = math.abs(math.subtract(near_shoulder, near_hip));
-        let torso_angle = get_angle2d(vect_hip_shoulder, math.matrix([0, 0, 0]), results.image.width, results.image.height);
+        let vect_hip_shoulder = math.subtract(near_shoulder, near_hip);
         let near_elbow = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_ELBOW]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_ELBOW]);
         let vect_shoulder_elbow = math.subtract(near_elbow, near_shoulder);
-        vect_shoulder_elbow.subset(math.index(0), math.abs(vect_shoulder_elbow.get([0])));
-        let shoulder_angle = get_angle2d(vect_shoulder_elbow, math.subtract(math.matrix([0, 0, 0]), vect_hip_shoulder), results.image.width, results.image.height);
         let near_wrist = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_WRIST]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_WRIST]);
         let vect_elbow_wrist = math.subtract(near_wrist, near_elbow);
-        vect_elbow_wrist.subset(math.index(0), math.abs(vect_elbow_wrist.get([0])));
-        let elbow_angle = get_angle2d(math.subtract(math.matrix([0, 0, 0]), vect_shoulder_elbow), vect_elbow_wrist, results.image.width, results.image.height);
         let near_knee = left ? landmark_to_matrix(math, results.poseLandmarks[25]) : landmark_to_matrix(math, results.poseLandmarks[26]);
         let near_ankle = left ? landmark_to_matrix(math, results.poseLandmarks[27]) : landmark_to_matrix(math, results.poseLandmarks[28]);
         let vect_knee_hip = math.subtract(near_hip, near_knee);
@@ -106,6 +101,14 @@ function onResults(results) {
             vect_knee_hip.subset(math.index(0), -vect_knee_hip.get([0]));
             vect_knee_ankle.subset(math.index(0), -vect_knee_ankle.get([0]));
         }
+        else {
+            vect_hip_shoulder.subset(math.index(0), -vect_hip_shoulder.get([0]));
+            vect_shoulder_elbow.subset(math.index(0), -vect_shoulder_elbow.get([0]));
+            vect_elbow_wrist.subset(math.index(0), -vect_elbow_wrist.get([0]));
+        }
+        let torso_angle = get_angle2d(vect_hip_shoulder, math.matrix([0, 0, 0]), results.image.width, results.image.height);
+        let shoulder_angle = get_angle2d(vect_shoulder_elbow, math.subtract(math.matrix([0, 0, 0]), vect_hip_shoulder), results.image.width, results.image.height);
+        let elbow_angle = get_angle2d(math.subtract(math.matrix([0, 0, 0]), vect_shoulder_elbow), vect_elbow_wrist, results.image.width, results.image.height);
         let knee_angle = get_angle2d(vect_knee_hip, vect_knee_ankle, results.image.width, results.image.height);
         console.log(`torso: ${torso_angle}, shoulder: ${shoulder_angle}, elbow: ${elbow_angle}, knee: ${knee_angle}`);
         let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
