@@ -1,5 +1,5 @@
 export function landmark_to_matrix(math, lm) {
-    const mat = math.matrix([lm.x, lm.y, lm.z]);
+    const mat = math.matrix([lm.x, -lm.y + 1, lm.z]);
     return mat;
 }
 export function landmark_list_to_matrix(lm_list) {

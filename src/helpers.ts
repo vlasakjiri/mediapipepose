@@ -4,7 +4,7 @@ import type * as MathType from "../types/math";
 
 export function landmark_to_matrix(math: typeof MathType, lm: MPPose.Landmark)
 {
-    const mat = math.matrix([lm.x, lm.y, lm.z]);
+    const mat = math.matrix([lm.x, -lm.y + 1, lm.z]);
 
     return mat;
 }

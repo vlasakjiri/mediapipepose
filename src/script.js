@@ -87,10 +87,18 @@ function onResults(results) {
             idx = Object.values(mpPose.POSE_LANDMARKS_RIGHT);
         }
         let near_hip = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_HIP]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_HIP]);
-        let near_shoulder_2d = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_SHOULDER]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]);
-        let vect_shoulder = math.abs(math.subtract(near_shoulder_2d, near_hip));
-        let angle_2d = get_angle2d(vect_shoulder, math.matrix([0, 0, 0]), results.image.width, results.image.height);
-        console.log(angle_2d);
+        let near_shoulder = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_SHOULDER]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]);
+        let vect_hip_shoulder = math.abs(math.subtract(near_shoulder, near_hip));
+        let torso_angle = get_angle2d(vect_hip_shoulder, math.matrix([0, 0, 0]), results.image.width, results.image.height);
+        let near_elbow = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_ELBOW]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_ELBOW]);
+        let vect_shoulder_elbow = math.subtract(near_elbow, near_shoulder);
+        vect_shoulder_elbow.subset(math.index(0), math.abs(vect_shoulder_elbow.get([0])));
+        let shoulder_angle = get_angle2d(vect_shoulder_elbow, math.subtract(math.matrix([0, 0, 0]), vect_hip_shoulder), results.image.width, results.image.height);
+        let near_wrist = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_WRIST]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_WRIST]);
+        let vect_elbow_wrist = math.subtract(near_wrist, near_elbow);
+        vect_elbow_wrist.subset(math.index(0), math.abs(vect_elbow_wrist.get([0])));
+        let elbow_angle = get_angle2d(math.subtract(math.matrix([0, 0, 0]), vect_shoulder_elbow), vect_elbow_wrist, results.image.width, results.image.height);
+        console.log(`torso: ${torso_angle}, shoulder: ${shoulder_angle}, elbow: ${elbow_angle}`);
         let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
         grid.updateLandmarks(landmarks, mpPose.POSE_CONNECTIONS, [
             { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
