@@ -5,6 +5,8 @@ import type * as MPPose from "../types/pose";
 import type * as MathType from "../types/math";
 import type { LandmarkGrid as LandmarkGridType } from "../types/control_utils_3d";
 
+import { landmark_list_to_matrix, landmark_matrix_to_list, landmark_to_matrix } from "./helpers";
+import { get_angle2d, filter_landmarks } from "./angle";
 
 const math = globalThis.math as typeof MathType;
 const controls = window as unknown as typeof Controls;
@@ -67,124 +69,9 @@ const grid2 = new LandmarkGrid(landmarkContainer, {
   centered: true,
 });
 
-function landmark_to_matrix(lm: MPPose.Landmark)
-{
-  const mat = math.matrix([lm.x, lm.y, lm.z]);
-
-  return mat;
-}
-
-function landmark_list_to_matrix(lm_list: MPPose.LandmarkList)
-{
-  let mat = [];
-  lm_list.forEach(lm =>
-  {
-    mat.push([lm.x, lm.y, lm.z]);
-  });
-  return mat;
-}
-
-function landmark_matrix_to_list(lm_mat: MathType.Matrix, lm_list: MPPose.LandmarkList)
-{
-  let new_lm_list: MPPose.LandmarkList = [];
-  for (let index = 0; index < lm_list.length; index++)
-  {
-
-    let x = lm_mat.get([index, 0]);
-    let y = lm_mat.get([index, 1]);
-    let z = lm_mat.get([index, 2]);
-    new_lm_list.push({ x: x, y: y, z: z, visibility: lm_list[index].visibility });
-  }
-  return new_lm_list;
-}
 
 
-function get_angle(lm: MPPose.LandmarkList)
-{
-  let left = false;
-  let hip: MPPose.Landmark, shoulder: MPPose.Landmark;
-  if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z)
-  {
-    left = true;
-    hip = lm[mpPose.POSE_LANDMARKS.LEFT_HIP];
-    shoulder = lm[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
-  }
-  else
-  {
-    hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
-    shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
-  }
-  let x_diff = Math.abs(shoulder.x - hip.x);
-  let y_diff = Math.abs(shoulder.y - hip.y);
-  let z_diff = Math.abs(shoulder.z - hip.z);
-  let x_vect = Math.sqrt(Math.pow(x_diff, 2) + Math.pow(z_diff, 2));
-  let y_vect = Math.sqrt(Math.pow(y_diff, 2) + Math.pow(z_diff, 2));
 
-  let angle = Math.atan2(y_vect, x_vect) * 180 / Math.PI;
-  //  let angle = Math.atan2(y x_vect) * 180 / Math.PI;
-
-  return { angle, left };
-}
-
-function get_angle_rotated(lm: MPPose.LandmarkList)
-{
-  let left = false;
-  let hip: MPPose.Landmark, shoulder: MPPose.Landmark;
-  if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z)
-  {
-    left = true;
-    hip = lm[mpPose.POSE_LANDMARKS.LEFT_HIP];
-    shoulder = lm[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
-  }
-  else
-  {
-    hip = lm[mpPose.POSE_LANDMARKS.RIGHT_HIP];
-    shoulder = lm[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
-  }
-  let x_diff = Math.abs(shoulder.x - hip.x);
-  let y_diff = Math.abs(shoulder.y - hip.y);
-  let angle = Math.atan2(y_diff, x_diff) * 180 / Math.PI;
-  return { angle, left };
-}
-
-function get_angle2d(a: MathType.Matrix, b: MathType.Matrix, width: number, height: number)
-{
-  let x_diff_a = a.get([0]) * width;
-  let y_diff_a = a.get([1]) * height;
-  let angle_a = Math.atan2(y_diff_a, x_diff_a);
-
-  let x_diff_b = b.get([0]) * width;
-  let y_diff_b = b.get([1]) * height;
-  let angle_b = Math.atan2(y_diff_a, x_diff_a);
-
-
-  return (angle_a - angle_b) * 180 / Math.PI;
-}
-
-export function get_angle3d(a: MathType.Matrix, b: MathType.Matrix)
-{
-  const dot_product = math.dot(a, b);
-  const norm1 = math.norm(a) as number;
-  const norm2 = math.norm(b) as number;
-  const cosa = dot_product / (norm1 * norm2);
-  const angle = Math.acos(cosa) * 180 / Math.PI;
-  return angle;
-
-}
-
-
-function filter_landmarks(idx: number[], landmarks: MPPose.Landmark[])
-{
-  return landmarks.map((lm: MPPose.Landmark, i: number) =>
-  {
-    if (!idx.includes(i))
-    {
-      lm.visibility = 0;
-    }
-    return lm;
-  }
-  );
-}
 
 let activeEffect = 'mask';
 function onResults(results: MPPose.Results): void
@@ -238,7 +125,7 @@ function onResults(results: MPPose.Results): void
     let res = get_angle(results.poseWorldLandmarks);
 
 
-    let mat = landmark_to_matrix(results.poseWorldLandmarks[0]);
+    let mat = landmark_to_matrix(math, results.poseWorldLandmarks[0]);
     left = res.left;
     console.log("angle: " + res.angle);
     // console.log("2d angle: " + get_angle2d(results.poseLandmarks, results.image.width, results.image.height).angle);
@@ -256,8 +143,8 @@ function onResults(results: MPPose.Results): void
       near_shoulder = results.poseWorldLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER];
       far_shoulder = results.poseWorldLandmarks[mpPose.POSE_LANDMARKS.LEFT_SHOULDER];
     }
-    near_shoulder = landmark_to_matrix(near_shoulder);
-    far_shoulder = landmark_to_matrix(far_shoulder);
+    near_shoulder = landmark_to_matrix(math, near_shoulder);
+    far_shoulder = landmark_to_matrix(math, far_shoulder);
     let vect_real = math.subtract(near_shoulder, far_shoulder);
 
     let x = vect_real.get([0]);
@@ -292,8 +179,8 @@ function onResults(results: MPPose.Results): void
     console.log(get_angle3d(math.matrix([1, 0, 0]), math.matrix([0, 1, 0])));
     console.log(get_angle3d(math.matrix([1, 0, 0]), math.matrix([1, 1, 0])));
 
-    let near_hip = left ? landmark_to_matrix(results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_HIP]) : landmark_to_matrix(results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_HIP]);
-    let near_shoulder_2d = left ? landmark_to_matrix(results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]) : landmark_to_matrix(results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]);
+    let near_hip = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.LEFT_HIP]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_HIP]);
+    let near_shoulder_2d = left ? landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]) : landmark_to_matrix(math, results.poseLandmarks[mpPose.POSE_LANDMARKS.RIGHT_SHOULDER]);
     let vect_shoulder = math.subtract(near_shoulder_2d, near_hip);
 
     let angle_2d = get_angle2d(vect_shoulder, math.matrix([0, 0, 0]), results.image.width, results.image.height);
