@@ -137,8 +137,22 @@ function onResults(results: MPPose.Results): void
     vect_elbow_wrist.subset(math.index(0), math.abs(vect_elbow_wrist.get([0])));
     let elbow_angle = get_angle2d(math.subtract(math.matrix([0, 0, 0]), vect_shoulder_elbow), vect_elbow_wrist, results.image.width, results.image.height);
 
+    let near_knee = left ? landmark_to_matrix(math, results.poseLandmarks[25]) : landmark_to_matrix(math, results.poseLandmarks[26]);
+    let near_ankle = left ? landmark_to_matrix(math, results.poseLandmarks[27]) : landmark_to_matrix(math, results.poseLandmarks[28]);
+    let vect_knee_hip = math.subtract(near_hip, near_knee);
+    let vect_knee_ankle = math.subtract(near_ankle, near_knee);
+    if (!left)
+    {
+      vect_knee_hip.subset(math.index(0), -vect_knee_hip.get([0]));
+      vect_knee_ankle.subset(math.index(0), -vect_knee_ankle.get([0]));
+    }
+    let knee_angle = get_angle2d(vect_knee_hip, vect_knee_ankle, results.image.width, results.image.height);
 
-    console.log(`torso: ${torso_angle}, shoulder: ${shoulder_angle}, elbow: ${elbow_angle}`);
+
+
+
+
+    console.log(`torso: ${torso_angle}, shoulder: ${shoulder_angle}, elbow: ${elbow_angle}, knee: ${knee_angle}`);
 
     let landmarks = filter_landmarks(idx, results.poseWorldLandmarks);
 
