@@ -1,43 +1,27 @@
-import type * as MPPose from "../types/pose";
-import type * as MathType from "../types/math";
-
-export function get_angle2d(a: MathType.Matrix, b: MathType.Matrix, width: number, height: number)
-{
+export function get_angle2d(a, b, width, height) {
     let x_diff_a = a.get([0]) * width;
     let y_diff_a = a.get([1]) * height;
     let angle_a = Math.atan2(y_diff_a, x_diff_a);
-
     let x_diff_b = b.get([0]) * width;
     let y_diff_b = b.get([1]) * height;
     let angle_b = Math.atan2(y_diff_b, x_diff_b);
-
-
     return (angle_a - angle_b) * 180 / Math.PI;
 }
-
-export function filter_landmarks(idx: number[], landmarks: MPPose.Landmark[])
-{
-    return landmarks.map((lm: MPPose.Landmark, i: number) =>
-    {
-        if (!idx.includes(i))
-        {
+export function filter_landmarks(idx, landmarks) {
+    return landmarks.map((lm, i) => {
+        if (!idx.includes(i)) {
             lm.visibility = 0;
         }
         return lm;
-    }
-    );
+    });
 }
-
-export function is_left_close(mpPose: typeof MPPose, lm: MPPose.LandmarkList)
-{
+export function is_left_close(mpPose, lm) {
     let left = false;
-    if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z)
-    {
+    if (lm[mpPose.POSE_LANDMARKS.LEFT_HIP].z <= lm[mpPose.POSE_LANDMARKS.RIGHT_HIP].z) {
         left = true;
     }
     return left;
 }
-
 // function get_angle(lm: MPPose.LandmarkList)
 // {
 //     let left = false;
@@ -58,13 +42,10 @@ export function is_left_close(mpPose: typeof MPPose, lm: MPPose.LandmarkList)
 //     let z_diff = Math.abs(shoulder.z - hip.z);
 //     let x_vect = Math.sqrt(Math.pow(x_diff, 2) + Math.pow(z_diff, 2));
 //     let y_vect = Math.sqrt(Math.pow(y_diff, 2) + Math.pow(z_diff, 2));
-
 //     let angle = Math.atan2(y_vect, x_vect) * 180 / Math.PI;
 //     //  let angle = Math.atan2(y x_vect) * 180 / Math.PI;
-
 //     return { angle, left };
 // }
-
 // function get_angle_rotated(lm: MPPose.LandmarkList)
 // {
 //     let left = false;
@@ -85,9 +66,6 @@ export function is_left_close(mpPose: typeof MPPose, lm: MPPose.LandmarkList)
 //     let angle = Math.atan2(y_diff, x_diff) * 180 / Math.PI;
 //     return { angle, left };
 // }
-
-
-
 // export function get_angle3d(a: MathType.Matrix, b: MathType.Matrix)
 // {
 //     const dot_product = math.dot(a, b);
@@ -96,7 +74,5 @@ export function is_left_close(mpPose: typeof MPPose, lm: MPPose.LandmarkList)
 //     const cosa = dot_product / (norm1 * norm2);
 //     const angle = Math.acos(cosa) * 180 / Math.PI;
 //     return angle;
-
 // }
-
-
+//# sourceMappingURL=angle.js.map
